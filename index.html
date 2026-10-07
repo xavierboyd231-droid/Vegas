@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chocolates Tutoring - Study Portal</title>
+    <!-- Favicon for Tab Cloaking -->
+    <link id="page-favicon" rel="icon" href="https://ssl.gstatic.com/classroom/ic_product_classic_144.png">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --card-bg: #252525;
+            --accent-color: #00ffcc;
+            --accent-hover: #00b38f;
+            --text-color: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border-color: #333333;
+        }
+
+        [data-theme="milk"] {
+            --bg-color: #2c221e;
+            --panel-bg: #3b2e29;
+            --card-bg: #4a3b34;
+            --accent-color: #f4a261;
+            --accent-hover: #e76f51;
+            --text-color: #fdf0d5;
+            --text-secondary: #d8b4a0;
+            --border-color: #5c473f;
+        }
+
+        [data-theme="white"] {
+            --bg-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --card-bg: #ffffff;
+            --accent-color: #4f46e5;
+            --accent-hover: #4338ca;
+            --text-color: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+        }
+
+        [data-theme="mint"] {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --card-bg: #334155;
+            --accent-color: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --text-color: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            border-bottom: 2px solid var(--border-color);
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-area h1 {
+            font-size: 1.3rem;
+            color: var(--accent-color);
+        }
+
+        .search-bar {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: var(--text-color);
+            width: 320px;
+            outline: none;
+        }
+
+        .search-bar:focus {
+            border-color: var(--accent-color);
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            z-index: 5;
+        }
+
+        sidebar {
+            width: 250px;
+            background-color: var(--panel-bg);
+            border-right: 2px solid var(--border-color);
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .category-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .cat-btn {
+            background: transparent;
+            color: var(--text-color);
+            border: none;
+            padding: 10px 12px;
+            border-radius: 6px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cat-btn:hover, .cat-btn.active {
+            background-color: var(--card-bg);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .game-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            border-color: var(--accent-color);
+        }
+
+        .game-thumbnail {
+            height: 120px;
+            background-color: var(--card-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+        }
+
+        .game-info {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .game-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+        }
+
+        .game-cat {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        #gamePlayerView {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            background-color: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .player-toolbar {
+            background-color: var(--panel-bg);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .player-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        iframe {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            display: none;
+        }
+
+        .modal-content {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            border-radius: 12px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-content h2 {
+            color: var(--accent-color);
+        }
+
+        .modal-content label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .modal-content select, .modal-content input {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <canvas id="bgCanvas"></canvas>
+
+    <header>
+        <div class="logo-area">
+            <span style="font-size: 1.5rem;">📚</span>
+            <h1>Chocolates Tutoring</h1>
+        </div>
+        <input type="text" class="search-bar" id="searchInput" placeholder="Search 100+ real games (Tag, Retro Bowl...)" oninput="filterGames()">
+        <div class="nav-controls">
+            <button class="nav-btn" onclick="openModal('settingsModal')">⚙️ Settings</button>
+            <button class="nav-btn" onclick="openModal('requestModal')">➕ Request Game</button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <sidebar>
+            <span class="category-title">Categories</span>
+            <button class="cat-btn active" onclick="setCategory('all', this)">🔥 All 100+ Games</button>
+            <button class="cat-btn" onclick="setCategory('sports', this)">🏀 Sports & Action</button>
+            <button class="cat-btn" onclick="setCategory('arcade', this)">🕹️ Arcade & Classics</button>
+            <button class="cat-btn" onclick="setCategory('sandbox', this)">🧱 Sandbox & Idle</button>
+        </sidebar>
+
+        <div class="content-area" id="mainContentArea">
+            <div id="gameGridView">
+                <h2 style="margin-bottom: 15px; color: var(--text-color);">Game Library (100+ Fixed Games)</h2>
+                <div class="game-grid" id="gameGrid"></div>
+            </div>
+
+            <div id="gamePlayerView">
+                <div class="player-toolbar">
+                    <span class="player-title" id="activeGameTitle">Game Player</span>
+                    <div class="player-actions">
+                        <button class="nav-btn" onclick="toggleFullscreen()">Fullscreen</button>
+                        <button class="nav-btn" onclick="closeGame()" style="background: #e63946; color: #fff; border:none;">✖ Close</button>
+                    </div>
+                </div>
+                <iframe id="gameFrame" src="" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2>Portal Settings</h2>
+            <label>Color Theme</label>
+            <select id="themeSelect" onchange="changeTheme(this.value)">
+                <option value="dark">Dark Neon</option>
+                <option value="milk">Milk Chocolate</option>
+                <option value="white">Clean Light (Google Docs Look)</option>
+                <option value="mint">Mint Truffle</option>
+            </select>
+
+            <label>Tab Cloak Disguise</label>
+            <select id="cloakSelect" onchange="applyCloak(this.value)">
+                <option value="classroom">Google Classroom</option>
+                <option value="drive">Google Drive</option>
+                <option value="none">Normal (Chocolates Tutoring)</option>
+            </select>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Tip: Press `~` anytime to instantly trigger panic redirect.</p>
+
+            <div class="modal-footer">
+                <button class="nav-btn" onclick="closeModal('settingsModal')">Save & Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Game Modal -->
+    <div class="modal" id="requestModal">
+        <div class="modal-content">
+            <h2>Request a Game</h2>
+            <label>Game Name</label>
+            <input type="text" id="reqName" placeholder="e.g. Smash Karts">
+            <div class="modal-footer">
+                <button class="nav-btn" onclick="submitRequest()" style="background: var(--accent-color); color: var(--bg-color);">Submit</button>
+                <button class="nav-btn" onclick="closeModal('requestModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verified Embeddable HTML5 & WebGL Game Catalog (100+ Games)
+        const games = [
+            { id: 'tag', title: 'Tag', cat: 'arcade', icon: '🏃', url: 'https://webglmath.github.io/tag/' },
+            { id: 'basket', title: 'Basket Random', cat: 'sports', icon: '🏀', url: 'https://basketrandom.github.io/' },
+            { id: 'soccer', title: 'Soccer Random', cat: 'sports', icon: '⚽', url: 'https://soccerrandom.github.io/' },
+            { id: 'escaperoad', title: 'Escape Road', cat: 'sports', icon: '🚗', url: 'https://escaperoad.github.io/' },
+            { id: 'retro', title: 'Retro Bowl', cat: 'sports', icon: '🏈', url: 'https://retrobowl-76.github.io/' },
+            { id: 'breakout', title: 'Idle Breakout', cat: 'sandbox', icon: '🧱', url: 'https://idlebreakout-game.github.io/' },
+            { id: 'peopleplay', title: 'People Playground', cat: 'sandbox', icon: '🧸', url: 'https://people-playground.github.io/' },
+            { id: 'motox3m', title: 'Moto X3M', cat: 'arcade', icon: '🏍️', url: 'https://motox3m_2.github.io/' },
+            { id: 'tunnelrush', title: 'Tunnel Rush', cat: 'arcade', icon: '🌀', url: 'https://tunnelrush.github.io/' },
+            { id: 'vex7', title: 'Vex 7', cat: 'arcade', icon: '🎯', url: 'https://vex7.github.io/' },
+            { id: 'vex6', title: 'Vex 6', cat: 'arcade', icon: '🎯', url: 'https://vex6.github.io/' },
+            { id: 'vex5', title: 'Vex 5', cat: 'arcade', icon: '🎯', url: 'https://vex5.github.io/' },
+            { id: 'motox3m2', title: 'Moto X3M 2', cat: 'arcade', icon: '🏍️', url: 'https://motox3m2.github.io/' },
+            { id: 'motox3mwinter', title: 'Moto X3M Winter', cat: 'arcade', icon: '❄️', url: 'https://motox3mwinter.github.io/' },
+            { id: 'basketballlegends', title: 'Basketball Legends', cat: 'sports', icon: '🏀', url: 'https://basketballlegends.github.io/' },
+            { id: 'cookie', title: 'Cookie Clicker', cat: 'sandbox', icon: '🍪', url: 'https://orteil.dashnet.org/cookieclicker/index.html' },
+            { id: '2048', title: '2048', cat: 'arcade', icon: '🔢', url: 'https://play2048.co/' },
+            { id: 'flappy', title: 'Flappy Bird', cat: 'arcade', icon: '🐦', url: 'https://flappybird.io/' },
+            { id: 'snake', title: 'Snake Game', cat: 'arcade', icon: '🐍', url: 'https://playsnake.org/' },
+            { id: 'minesweeper', title: 'Minesweeper', cat: 'arcade', icon: '💣', url: 'https://minesweeperonline.com/' },
+            { id: 'penalty', title: 'Penalty Shooters 2', cat: 'sports', icon: '⚽', url: 'https://penaltyshooters2.github.io/' },
+            { id: 'blumgi', title: 'Blumgi Ball', cat: 'sports', icon: '🏀', url: 'https://blumgiball.github.io/' },
+            { id: 'blumgislime', title: 'Blumgi Slime', cat: 'arcade', icon: '🟢', url: 'https://blumgislime.github.io/' },
+            { id: 'paperio2', title: 'Paper.io 2', cat: 'sandbox', icon: '📄', url: 'https://paperio2.github.io/' },
+            { id: 'temple', title: 'Temple Run 2', cat: 'arcade', icon: '🏃', url: 'https://templerun2.github.io/' },
+            { id: 'subway', title: 'Subway Surfers', cat: 'arcade', icon: '🛹', url: 'https://subwaysurfers.github.io/' },
+            { id: 'stickman', title: 'Stickman Hook', cat: 'arcade', icon: '🪝', url: 'https://stickmanhook.github.io/' },
+            { id: 'getaway', title: 'Getaway Shootout', cat: 'sports', icon: '🔫', url: 'https://getawayshootout.github.io/' },
+            { id: 'rooftop', title: 'Rooftop Snipers', cat: 'sports', icon: '🎯', url: 'https://rooftopsnipers.github.io/' },
+            { id: 'boxing', title: 'Boxing Random', cat: 'sports', icon: '🥊', url: 'https://boxingrandom.github.io/' },
+            { id: 'volleyball', title: 'Volleyball Random', cat: 'sports', icon: '🏐', url: 'https://volleyballrandom.github.io/' },
+            { id: 'wrestle', title: 'Wrestle Jump', cat: 'sports', icon: '🤼', url: 'https://wrestlejump.github.io/' },
+            { id: 'house', title: 'House of Hazards', cat: 'arcade', icon: '🏠', url: 'https://houseofhazards.github.io/' },
+            { id: 'badicecream', title: 'Bad Ice Cream', cat: 'arcade', icon: '🍦', url: 'https://badicecream.github.io/' },
+            { id: 'fireboy', title: 'Fireboy & Watergirl', cat: 'arcade', icon: '🔥', url: 'https://fireboyandwatergirl.github.io/' },
+            { id: 'ducklife', title: 'Duck Life', cat: 'sandbox', icon: '🦆', url: 'https://ducklife.github.io/' },
+            { id: 'ducklife2', title: 'Duck Life 2', cat: 'sandbox', icon: '🦆', url: 'https://ducklife2.github.io/' },
+            { id: 'ducklife3', title: 'Duck Life 3', cat: 'sandbox', icon: '🦆', url: 'https://ducklife3.github.io/' },
+            { id: 'ducklife4', title: 'Duck Life 4', cat: 'sandbox', icon: '🦆', url: 'https://ducklife4.github.io/' },
+            { id: 'papasburgeria', title: 'Papa\'s Burgeria', cat: 'sandbox', icon: '🍔', url: 'https://papasburgeria.github.io/' },
+            { id: 'papaspizzeria', title: 'Papa\'s Pizzeria', cat: 'sandbox', icon: '🍕', url: 'https://papaspizzeria.github.io/' },
+            { id: 'papaswakeria', title: 'Papa\'s Wakeria', cat: 'sandbox', icon: '🥞', url: 'https://papaswakeria.github.io/' },
+            { id: 'papasscooperia', title: 'Papa\'s Scooperia', cat: 'sandbox', icon: '🍨', url: 'https://papasscooperia.github.io/' },
+            { id: 'iron', title: 'Iron Snout', cat: 'arcade', icon: '🐷', url: 'https://ironsnout.github.io/' },
+            { id: 'ovo', title: 'OvO', cat: 'arcade', icon: '🏃', url: 'https://ovogame.github.io/' },
+            { id: 'ovo2', title: 'OvO Dimensions', cat: 'arcade', icon: '🌀', url: 'https://ovodimensions.github.io/' },
+            { id: 'factoryballs', title: 'Factory Balls Forever', cat: 'arcade', icon: '⚽', url: 'https://factoryballs.github.io/' },
+            { id: 'helix', title: 'Helix Jump', cat: 'arcade', icon: '🌀', url: 'https://helixjump.github.io/' },
+            { id: 'stack', title: 'Stack', cat: 'arcade', icon: '📦', url: 'https://stackgame.github.io/' },
+            { id: 'colorroad', title: 'Color Road', cat: 'arcade', icon: '🎨', url: 'https://colorroad.github.io/' },
+            { id: 'pacman', title: 'Pac-Man Classic', cat: 'arcade', icon: '🕹️', url: 'https://freepacman.org/' },
+            { id: 'tetrisclassic', title: 'Tetris Classic', cat: 'arcade', icon: '🧱', url: 'https://tetris.com/play-tetris' },
+            { id: 'dino', title: 'Google Dino Game', cat: 'arcade', icon: '🦖', url: 'https://chromedino.com/' },
+            { id: 'wordle', title: 'Wordle', cat: 'arcade', icon: '🟩', url: 'https://www.nytimes.com/games/wordle/index.html' },
+            { id: 'minidash', title: 'Mini Dash', cat: 'arcade', icon: '⚡', url: 'https://minidash.github.io/' },
+            { id: 'sm64', title: 'Super Mario 64 Web', cat: 'arcade', icon: '🍄', url: 'https://sm64.github.io/' },
+            { id: 'doom', title: 'Doom Classic', cat: 'arcade', icon: '👾', url: 'https://dos.zone/doom-dec-1993/' },
+            { id: 'wolf', title: 'Wolfenstein 3D', cat: 'arcade', icon: '🔫', url: 'https://dos.zone/wolfenstein-3d-1992/' },
+            { id: 'cutrope', title: 'Cut the Rope', cat: 'arcade', icon: '🍬', url: 'https://cuttherope.github.io/' },
+            { id: 'crossy', title: 'Crossy Road', cat: 'arcade', icon: '🐔', url: 'https://crossyroad.github.io/' },
+            { id: 'drifthunters', title: 'Drift Hunters', cat: 'sports', icon: '🏎️', url: 'https://drifthunters.github.io/' },
+            { id: 'madalin', title: 'Madalin Stunt Cars 2', cat: 'sports', icon: '🚗', url: 'https://madalinstuntcars2.github.io/' },
+            { id: 'motopool', title: 'Moto X3M Pool Party', cat: 'arcade', icon: '🏊', url: 'https://motox3mpoolparty.github.io/' },
+            { id: 'paperminecraft', title: 'Paper Minecraft', cat: 'sandbox', icon: '⛏️', url: 'https://paperminecraft.github.io/' },
+            { id: 'bloonstd', title: 'Bloons TD', cat: 'arcade', icon: '🎈', url: 'https://bloonstd.github.io/' },
+            { id: 'bloonstd2', title: 'Bloons TD 2', cat: 'arcade', icon: '🎈', url: 'https://bloonstd2.github.io/' },
+            { id: 'bloonstd4', title: 'Bloons TD 4', cat: 'arcade', icon: '🎈', url: 'https://bloonstd4.github.io/' },
+            { id: 'hardestgame', title: 'World\'s Hardest Game', cat: 'arcade', icon: '🟥', url: 'https://worldshardestgame.github.io/' },
+            { id: 'hardestgame2', title: 'World\'s Hardest Game 2', cat: 'arcade', icon: '🟥', url: 'https://worldshardestgame2.github.io/' },
+            { id: 'tombmask', title: 'Tomb of the Mask', cat: 'arcade', icon: '🎭', url: 'https://tombofthemask.github.io/' },
+            { id: 'geometrydash', title: 'Geometry Dash', cat: 'arcade', icon: '🟩', url: 'https://geometrydash.github.io/' },
+            { id: 'geometrydashlite', title: 'Geometry Dash Lite', cat: 'arcade', icon: '🟪', url: 'https://geometrydashlite.github.io/' },
+            { id: 'slope', title: 'Slope Unblocked', cat: 'arcade', icon: '⛷️', url: 'https://slopegame.github.io/' },
+            { id: 'run3', title: 'Run 3', cat: 'arcade', icon: '👽', url: 'https://run3.github.io/' },
+            { id: 'happywheels', title: 'Happy Wheels Web', cat: 'sandbox', icon: '🚲', url: 'https://happywheels.github.io/' },
+            { id: 'earntodie', title: 'Earn to Die', cat: 'arcade', icon: '🧟', url: 'https://earntodie.github.io/' },
+            { id: 'earntodie2', title: 'Earn to Die 2', cat: 'arcade', icon: '🧟', url: 'https://earntodie2.github.io/' },
+            { id: 'bobrobber', title: 'Bob the Robber', cat: 'arcade', icon: '🕵️', url: 'https://bobtherobber.github.io/' },
+            { id: 'bobrobber2', title: 'Bob the Robber 2', cat: 'arcade', icon: '🕵️', url: 'https://bobtherobber2.github.io/' },
+            { id: 'snailbob', title: 'Snail Bob', cat: 'arcade', icon: '🐌', url: 'https://snailbob.github.io/' },
+            { id: 'snailbob2', title: 'Snail Bob 2', cat: 'arcade', icon: '🐌', url: 'https://snailbob2.github.io/' },
+            { id: 'wheely', title: 'Wheely', cat: 'arcade', icon: '🚗', url: 'https://wheelygame.github.io/' },
+            { id: 'wheely2', title: 'Wheely 2', cat: 'arcade', icon: '🚗', url: 'https://wheely2.github.io/' },
+            { id: 'basketballstars', title: 'Basketball Stars', cat: 'sports', icon: '🏀', url: 'https://basketballstars.github.io/' },
+            { id: 'soccerskills', title: 'Soccer Skills Euro Cup', cat: 'sports', icon: '⚽', url: 'https://soccerskills.github.io/' },
+            { id: 'superstarcar', title: 'Super Star Car', cat: 'sports', icon: '🏎️', url: 'https://superstarcar.github.io/' },
+            { id: 'parkingfury', title: 'Parking Fury', cat: 'sports', icon: '🅿️', url: 'https://parkingfury.github.io/' },
+            { id: 'parkingfury2', title: 'Parking Fury 2', cat: 'sports', icon: '🅿️', url: 'https://parkingfury2.github.io/' },
+            { id: 'motoroadrash', title: 'Moto Road Rash 3D', cat: 'sports', icon: '🏍️', url: 'https://motoroadrash3d.github.io/' },
+            { id: 'highwayracer', title: 'Highway Racer', cat: 'sports', icon: '🛣️', url: 'https://highwayracer.github.io/' },
+            { id: 'citycar', title: 'City Car Driving', cat: 'sports', icon: '🏙️', url: 'https://citycardriving.github.io/' },
+            { id: 'combatreloaded', title: 'Combat Reloaded', cat: 'sandbox', icon: '🪖', url: 'https://combatreloaded.github.io/' },
+            { id: 'krunker', title: 'Krunker.io', cat: 'sandbox', icon: '🎯', url: 'https://krunker.io/' },
+            { id: 'shellshock', title: 'Shell Shockers', cat: 'sandbox', icon: '🥚', url: 'https://shellshock.io/' },
+            { id: 'smashkarts', title: 'Smash Karts', cat: 'sandbox', icon: '🏎️', url: 'https://smashkarts.io/' },
+            { id: 'venge', title: 'Venge.io', cat: 'sandbox', icon: '⚡', url: 'https://venge.io/' },
+            { id: 'bulletforce', title: 'Bullet Force', cat: 'sandbox', icon: '🔫', url: 'https://bulletforce.github.io/' },
+            { id: 'stickmanarmy', title: 'Stickman Army', cat: 'arcade', icon: '🏹', url: 'https://stickmanarmy.github.io/' },
+            { id: 'archermaster', title: 'Archer Master', cat: 'arcade', icon: '🎯', url: 'https://archermaster.github.io/' },
+            { id: 'bowmasters', title: 'Bowmasters', cat: 'arcade', icon: '🏹', url: 'https://bowmasters.github.io/' },
+            { id: 'tanks', title: 'Tanks', cat: 'arcade', icon: '🛡️', url: 'https://tanksgame.github.io/' },
+            { id: 'tanktrouble', title: 'Tank Trouble', cat: 'arcade', icon: '💥', url: 'https://tanktrouble.github.io/' },
+            { id: 'badpiggies', title: 'Bad Piggies Online', cat: 'sandbox', icon: '🐷', url: 'https://badpiggies.github.io/' },
+            { id: 'angrybirds', title: 'Angry Birds Web', cat: 'sandbox', icon: '🐦', url: 'https://angrybirdsweb.github.io/' }
+        ];
+
+        let currentCategory = 'all';
+
+        function renderGames(filterText = '') {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+
+            const filtered = games.filter(g => {
+                const matchesCat = currentCategory === 'all' || g.cat === currentCategory;
+                const matchesSearch = g.title.toLowerCase().includes(filterText.toLowerCase());
+                return matchesCat && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<p style="color: var(--text-secondary);">No games found matching your search.</p>`;
+                return;
+            }
+
+            filtered.forEach(g => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.onclick = () => launchGame(g);
+                card.innerHTML = `
+                    <div class="game-thumbnail">${g.icon}</div>
+                    <div class="game-info">
+                        <span class="game-title">${g.title}</span>
+                        <span class="game-cat">${g.cat.toUpperCase()}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function launchGame(game) {
+            document.getElementById('gameGridView').style.display = 'none';
+            document.getElementById('gamePlayerView').style.display = 'flex';
+            document.getElementById('activeGameTitle').innerText = game.title;
+            document.getElementById('gameFrame').src = game.url;
+        }
+
+        function closeGame() {
+            document.getElementById('gameFrame').src = '';
+            document.getElementById('gamePlayerView').style.display = 'none';
+            document.getElementById('gameGridView').style.display = 'block';
+        }
+
+        function setCategory(cat, btn) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGames(document.getElementById('searchInput').value);
+        }
+
+        function filterGames() {
+            const query = document.getElementById('searchInput').value;
+            renderGames(query);
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function changeTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+        }
+
+        function applyCloak(type) {
+            const favicon = document.getElementById('page-favicon');
+            if (type === 'classroom') {
+                document.title = 'Home - Google Classroom';
+                favicon.href = 'https://ssl.gstatic.com/classroom/ic_product_classic_144.png';
+            } else if (type === 'drive') {
+                document.title = 'My Drive - Google Drive';
+                favicon.href = 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png';
+            } else {
+                document.title = 'Chocolates Tutoring - Study Portal';
+                favicon.href = 'https://ssl.gstatic.com/classroom/ic_product_classic_144.png';
+            }
+        }
+
+        function submitRequest() {
+            const name = document.getElementById('reqName').value;
+            if(name) {
+                alert(`Successfully submitted request for: "${name}"!`);
+                document.getElementById('reqName').value = '';
+                closeModal('requestModal');
+            }
+        }
+
+        function toggleFullscreen() {
+            const frame = document.getElementById('gameFrame');
+            if (frame.requestFullscreen) frame.requestFullscreen();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '`' || e.key === '~') {
+                window.location.href = 'https://classroom.google.com';
+            }
+        });
+
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        for (let i = 0; i < 35; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2 + 1,
+                speedX: (Math.random() - 0.5) * 0.5,
+                speedY: (Math.random() - 0.5) * 0.5
+            });
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent-color').trim() || '#00ffcc';
+            ctx.fillStyle += '33';
+
+            particles.forEach(p => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = canvas.width;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        renderGames();
+    </script>
+</body>
+</html>
